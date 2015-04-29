@@ -21,6 +21,10 @@ class League(Base):
     short_name_cn = sa.Column(sa.String(30))
     is_cup = sa.Column(sa.Boolean)
 
+    def __init__(self, **kwargs):
+        super(League, self).__init__()
+        self.__dict__.update(kwargs)
+
 
 league_team = sa.Table("league_team",
                        Base.metadata,
@@ -38,4 +42,8 @@ class Team(Base):
     city = sa.Column(sa.String(100))
     type = sa.Column(sa.String(10))
     league = relationship("League", secondary=league_team, backref="team")
+
+    def __init__(self, **kwargs):
+        super(Team, self).__init__()
+        self.__dict__.update(kwargs)
 
