@@ -21,10 +21,6 @@ class League(Base):
     short_name_cn = sa.Column(sa.String(30))
     is_cup = sa.Column(sa.Boolean)
 
-    def __init__(self, **kwargs):
-        super(League, self).__init__()
-        self.__dict__.update(kwargs)
-
 
 league_team = sa.Table("league_team",
                        Base.metadata,
@@ -45,5 +41,8 @@ class Team(Base):
 
     def __init__(self, **kwargs):
         super(Team, self).__init__()
+        self.__dict__.update(kwargs)
+
+    def update(self, **kwargs):
         self.__dict__.update(kwargs)
 

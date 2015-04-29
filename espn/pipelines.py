@@ -19,10 +19,13 @@ class TeamPipeline(object):
     def process_item(self, item, spider):
         if isinstance(item, TeamItem):
             session = self.session()
-            if not session.query(Team).filter_by(**item):
+            team = session.query(Team).filter_by(id=item["id"]).first()
+            if not team:
                 team = Team(**item)
                 session.add(team)
-                session.commit()
+            else:
+                team.update(**item)
+            session.commit()
         return item
 
     @classmethod
