@@ -36,5 +36,6 @@ class Team(Base):
     name = sa.Column(sa.String(60))
     name_en = sa.Column(sa.String(60))
     city = sa.Column(sa.String(100))
+    type = sa.Column(sa.String(10))
     league = relationship("League", secondary=league_team, backref="team")
 
