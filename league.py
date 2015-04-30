@@ -19,7 +19,6 @@ href_pat = re.compile(r".*?/(?P<id>\d+)/index")
 
 
 def main():
-    import pudb; pudb.set_trace()  # XXX BREAKPOINT
     data = requests.get("http://www.espnfc.com/api/navigation?xhr=1")
     data = json.loads(data.content)
     nav = data["navigationItems"]

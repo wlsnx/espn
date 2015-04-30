@@ -38,6 +38,10 @@ class Team(Base):
     city = sa.Column(sa.String(100))
     type = sa.Column(sa.String(10))
     league = relationship("League", secondary=league_team, backref="team")
+    ground = sa.Column(sa.String(40))
+    letter = sa.Column(sa.String(10))
+    #TODO:create player table
+    #master = sa.Column(sa.Integer, sa.ForeignKey("yt_player.id"))
 
     def __init__(self, **kwargs):
         super(Team, self).__init__()
