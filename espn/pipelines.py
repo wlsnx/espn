@@ -8,24 +8,27 @@
 
 from espn.items import TeamItem
 #import sys
-from sports.sports_data import Team
+from sports.sports_data import Team, League
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from scrapy.exceptions import NotConfigured
+from espn.spiders.team import TeamSpider
 
 
 class TeamPipeline(object):
 
     def process_item(self, item, spider):
         if isinstance(item, TeamItem):
-            session = self.session()
-            team = session.query(Team).filter_by(id=item["id"]).first()
+            team = self.session.query(Team).filter_by(id=item["id"]).first()
+            league_id = item.pop("league_id")
             if not team:
                 team = Team(**item)
-                session.add(team)
+                self.session.add(team)
             else:
                 team.update(**item)
-            session.commit()
+            league = self.session.query(League).filter_by(id=league_id).first()
+            if league and league not in team.league:
+                team.league.append(league)
         return item
 
     @classmethod
@@ -35,6 +38,10 @@ class TeamPipeline(object):
         if not server:
             raise NotConfigured
         db = sa.create_engine(server)
-        tp.session = sessionmaker(db)
+        tp.session = sessionmaker(db)()
         return tp
+
+    def close_spider(self, spider):
+        if isinstance(spider, TeamSpider):
+            self.session.commit()
 

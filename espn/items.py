@@ -24,4 +24,5 @@ class TeamItem(Item):
     city = scrapy.Field()
     id = scrapy.Field()
     type = scrapy.Field()
+    league_id = scrapy.Field()
 
