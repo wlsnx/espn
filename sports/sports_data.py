@@ -20,6 +20,7 @@ class League(Base):
     short_name = sa.Column(sa.String(30))
     short_name_cn = sa.Column(sa.String(30))
     is_cup = sa.Column(sa.Boolean)
+    espn_name = sa.Column(sa.String(60))
 
 
 league_team = sa.Table("league_team",
@@ -40,13 +41,16 @@ class Team(Base):
     league = relationship("League", secondary=league_team, backref="team")
     ground = sa.Column(sa.String(40))
     letter = sa.Column(sa.String(10))
+    espn_name = sa.Column(sa.String(60))
     #TODO:create player table
     #master = sa.Column(sa.Integer, sa.ForeignKey("yt_player.id"))
 
     def __init__(self, **kwargs):
         super(Team, self).__init__()
-        self.__dict__.update(kwargs)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def update(self, **kwargs):
-        self.__dict__.update(kwargs)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 

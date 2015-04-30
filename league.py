@@ -15,7 +15,7 @@ from espn import settings
 
 db = sa.create_engine(settings.SERVER)
 session = sessionmaker(db)()
-href_pat = re.compile(r".*?/(?P<id>\d+)/index")
+href_pat = re.compile(r".*/(?P<name>.*?)/(?P<id>\d+)/index")
 
 
 def main():
@@ -33,11 +33,13 @@ def main():
                 group = matched.groupdict()
                 #type = group["type"]
                 id = group["id"]
+                espn_name = group["name"]
                 league = session.query(League).filter_by(name=name).first()
                 if league:
                     league.id = id
+                    league.espn_name = espn_name
                     #league.type = type
-                    session.add(league)
+                    #session.add(league)
     session.commit()
 
 

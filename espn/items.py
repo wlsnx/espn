@@ -25,4 +25,5 @@ class TeamItem(Item):
     id = scrapy.Field()
     type = scrapy.Field()
     league_id = scrapy.Field()
+    espn_name = scrapy.Field()
 

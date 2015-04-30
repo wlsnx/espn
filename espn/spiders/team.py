@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup as bs
 import re
 
 
-href_pat = re.compile(r".*?/(?P<type>team|club)/.*?/(?P<id>\d+)/index")
+href_pat = re.compile(r".*?/(?P<type>team|club)/(?P<name>.*?)/(?P<id>\d+)/index")
 
 
 class TeamSpider(scrapy.Spider):
@@ -54,8 +54,10 @@ class TeamSpider(scrapy.Spider):
                 group = matched.groupdict()
                 type = group["type"]
                 id = group["id"]
+                espn_name = group["name"]
                 item = TeamItem(name_en=name_en,
                                 id=id,
+                                espn_name=espn_name,
                                 league_id=league_id,
                                 type=type)
                 yield item
