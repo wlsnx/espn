@@ -6,6 +6,13 @@
 # http://doc.scrapy.org/en/latest/topics/items.html
 
 import scrapy
+from scrapy.contrib.loader import ItemLoader
+from scrapy.contrib.loader.processor import TakeFirst
+
+
+class EspnLoader(ItemLoader):
+
+    default_output_processor = TakeFirst()
 
 
 class Item(scrapy.Item):
@@ -26,4 +33,21 @@ class TeamItem(Item):
     type = scrapy.Field()
     league_id = scrapy.Field()
     espn_name = scrapy.Field()
+
+
+class PlayerItem(Item):
+
+    name = scrapy.Field()
+    name_en = scrapy.Field()
+    position = scrapy.Field()
+    height = scrapy.Field()
+    weight = scrapy.Field()
+    country = scrapy.Field()
+    country_en = scrapy.Field()
+    birthday = scrapy.Field()
+    age = scrapy.Field()
+    team_id = scrapy.Field()
+    number = scrapy.Field()
+    id = scrapy.Field()
+
 
