@@ -93,3 +93,9 @@ class PlayerPipeline(TeamPipeline):
             _item["birthday"] = birthday
         return _item
 
+    @classmethod
+    def from_settings(cls, settings):
+        pp = super(PlayerPipeline, cls).from_settings(settings)
+        pp.session.autocommit = True
+        return pp
+
