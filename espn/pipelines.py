@@ -12,6 +12,7 @@ from sports.sports_data import Team, League, TeamPlayer, Player
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from scrapy.exceptions import NotConfigured
+from twisted.internet import reactor
 #from espn.spiders.team import TeamSpider
 
 
@@ -34,13 +35,21 @@ class TeamPipeline(object):
     @classmethod
     def from_settings(cls, settings):
         tp = cls()
-        server = settings.get("SERVER")
-        if not server:
+        SERVER = settings.get("SERVER")
+        if not SERVER:
             raise NotConfigured
-        db = sa.create_engine(server)
+        db = sa.create_engine(SERVER)
         tp.Session = sessionmaker(db)
         tp.session = tp.Session()
+        AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
+        if AUTO_COMMIT_INTERVAL:
+            tp.AUTO_COMMIT_INTERVAL = AUTO_COMMIT_INTERVAL
+            reactor.callLater(tp.AUTO_COMMIT_INTERVAL, tp.auto_commit)
         return tp
+
+    def auto_commit(self):
+        self.session.commit()
+        reactor.callLater(self.AUTO_COMMIT_INTERVAL, self.auto_commit)
 
     def close_spider(self, spider):
         self.session.commit()
@@ -92,10 +101,4 @@ class PlayerPipeline(TeamPipeline):
             birthday = datetime.strptime(_item["birthday"], "%B %d, %Y ")
             _item["birthday"] = birthday
         return _item
-
-    @classmethod
-    def from_settings(cls, settings):
-        pp = super(PlayerPipeline, cls).from_settings(settings)
-        pp.session.autocommit = True
-        return pp
 
