@@ -18,7 +18,7 @@ class PlayerSpider(Spider):
         #Rule(LinkExtractor(allow=r'player/\d+/.*'), callback='parse_player', follow=True),
     #)
 
-    URL = "http://www.espnfc.com/{type}/{espn_name}/{id}/squad"
+    URL = "http://www.espnfc.com/{type}/{espn_name}/{id}/squad?league=all"
     player_pat = re.compile("/(\d+)/")
 
     def start_requests(self):
