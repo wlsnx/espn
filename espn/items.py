@@ -45,7 +45,7 @@ class PlayerItem(Item):
     country = scrapy.Field()
     country_en = scrapy.Field()
     birthday = scrapy.Field()
-    age = scrapy.Field()
+    #age = scrapy.Field()
     team_id = scrapy.Field()
     number = scrapy.Field()
     id = scrapy.Field()

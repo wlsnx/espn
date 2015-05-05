@@ -57,7 +57,7 @@ class PlayerSpider(Spider):
         for tr in trs:
             pos = tr.find("td", attrs={"class": "pos"}).text
             no = tr.find("td", attrs={"class": "no"}).text
-            age = tr.find("td", attrs={"class": "age"}).text
+            #age = tr.find("td", attrs={"class": "age"}).text
             pla = tr.find("td", attrs={"class": "pla"})
             name = pla.get("data-value")
             a = pla.a
@@ -69,7 +69,7 @@ class PlayerSpider(Spider):
                     player = PlayerItem(position=pos,
                                         number=no,
                                         id=id,
-                                        age=age,
+                                        #age=age,
                                         team_id=team_id,
                                         name_en=name)
                     yield Request(href,
