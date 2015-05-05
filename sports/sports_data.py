@@ -35,20 +35,20 @@ class League(Base):
     espn_name = sa.Column(sa.String(60))
 
 
-#league_team = sa.Table("league_team",
-                       #Base.metadata,
-                       #sa.Column("team_id", sa.Integer, sa.ForeignKey("yt_team.id")),
-                       #sa.Column("league_id", sa.Integer, sa.ForeignKey("yt_league.id")))
+league_team = sa.Table("league_team",
+                       Base.metadata,
+                       sa.Column("team_id", sa.Integer, sa.ForeignKey("yt_team.id")),
+                       sa.Column("league_id", sa.Integer, sa.ForeignKey("yt_league.id")))
 
 
-class LeagueTeam(Base):
+#class LeagueTeam(Base):
 
-    __tablename__ = "league_team"
+    #__tablename__ = "league_team"
 
-    team_id = sa.Column(sa.Integer, sa.ForeignKey("yt_team.id"))
-    league_id = sa.Column(sa.Integer, sa.ForeignKey("yt_league.id"))
+    #team_id = sa.Column(sa.Integer, sa.ForeignKey("yt_team.id"))
+    #league_id = sa.Column(sa.Integer, sa.ForeignKey("yt_league.id"))
 
-    __table_args__ = (sa.PrimaryKeyConstraint(team_id, league_id), )
+    #__table_args__ = (sa.PrimaryKeyConstraint(team_id, league_id), )
 
 
 class Team(Base, Item):
@@ -60,7 +60,7 @@ class Team(Base, Item):
     name_en = sa.Column(sa.String(60))
     city = sa.Column(sa.String(100))
     type = sa.Column(sa.String(10))
-    league = relationship("League", secondary=LeagueTeam.__table__, backref="team")
+    league = relationship("League", secondary=league_team, backref="team")
     ground = sa.Column(sa.String(40))
     letter = sa.Column(sa.String(10))
     espn_name = sa.Column(sa.String(60))
@@ -102,7 +102,7 @@ class Player(Base, Item):
     country = sa.Column(sa.String(30))
     country_en = sa.Column(sa.String(30))
     birthday = sa.Column(sa.DateTime())
-    age = sa.Column(sa.SmallInteger)
+    #age = sa.Column(sa.SmallInteger)
     team = relationship("TeamPlayer")
 
 
