@@ -106,6 +106,22 @@ class Player(Base, Item):
     team = relationship("TeamPlayer")
 
 
+class Match(Base, Item):
+
+    __tablename__ = "yt_match"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    espn_id = sa.Column(sa.Integer)
+    league_id = sa.Column(sa.Integer, sa.ForeignKey("yt_league.id"))
+    finish = sa.Column(sa.SmallInteger)
+    home_score = sa.Column(sa.SmallInteger)
+    away_score = sa.Column(sa.SmallInteger)
+    home_id = sa.Column(sa.Integer, sa.ForeignKey("yt_team.id"))
+    away_id = sa.Column(sa.Integer, sa.ForeignKey("yt_team.id"))
+    date = sa.Column(sa.Date)
+    time = sa.Column(sa.Time)
+
+
 import sys
 sys.path.append("..")
 

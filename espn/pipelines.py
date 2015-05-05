@@ -6,12 +6,12 @@
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-from espn.items import TeamItem, PlayerItem
+from espn.items import TeamItem, PlayerItem, MatchItem
 #import sys
-from sports.sports_data import Team, League, TeamPlayer, Player
+from sports.sports_data import Team, League, TeamPlayer, Player, Match
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
-from scrapy.exceptions import NotConfigured
+from scrapy.exceptions import NotConfigured, DropItem
 from twisted.internet import reactor
 #from espn.spiders.team import TeamSpider
 
@@ -101,4 +101,57 @@ class PlayerPipeline(TeamPipeline):
             birthday = datetime.strptime(_item["birthday"], "%B %d, %Y ")
             _item["birthday"] = birthday
         return _item
+
+
+class MatchPipeline(TeamPipeline):
+
+    status = {"FT": 2}
+
+    def process_item(self, item, spider):
+        if isinstance(item, MatchItem):
+            finish = item["finish"]
+            finish = self.status[finish] if finish in self.status else 0
+            item["finish"] = finish
+
+            date = item["date"]
+            date = datetime.strptime(date, "%b %d, %Y")
+            item["date"] = date
+
+            home_id = item["home_id"]
+            if not home_id.isdigit():
+                home_id = self.session.query(Team).filter_by(name=home_id).first()
+            else:
+                home_id = self.session.query(Team).filter_by(id=home_id).first()
+            if home_id:
+                item["home_id"] = home_id.id
+            else:
+                raise DropItem
+
+            away_id = item["away_id"]
+            if not away_id.isdigit():
+                away_id = self.session.query(Team).filter_by(name=away_id).first()
+            else:
+                away_id = self.session.query(Team).filter_by(id=away_id).first()
+            if away_id:
+                item["away_id"] = away_id.id
+            else:
+                raise DropItem
+
+            league_id = item["league_id"]
+            if not league_id.isdigit():
+                league_id = self.session.query(League).filter_by(name=league_id).first()
+            else:
+                league_id = self.session.query(League).filter_by(id=league_id).first()
+            if league_id:
+                item["league_id"] = league_id.id
+            else:
+                item.pop("league_id")
+
+            match = self.session.query(Match).filter_by(espn_id=item["espn_id"]).first()
+            if not match:
+                match = Match(**item)
+                self.session.add(match)
+            else:
+                match.update(**item)
+        return item
 

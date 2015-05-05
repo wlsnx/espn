@@ -51,3 +51,16 @@ class PlayerItem(Item):
     id = scrapy.Field()
 
 
+class MatchItem(Item):
+
+    date = scrapy.Field()
+    id = scrapy.Field()
+    finish = scrapy.Field()
+    home_id = scrapy.Field()
+    away_id = scrapy.Field()
+    home_score = scrapy.Field()
+    away_score = scrapy.Field()
+    league_id = scrapy.Field()
+    espn_id = scrapy.Field()
+    time = scrapy.Field()
+
