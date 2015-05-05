@@ -129,7 +129,7 @@ class MatchPipeline(TeamPipeline):
 
             away_id = item["away_id"]
             if not away_id.isdigit():
-                away_id = self.session.query(Team).filter_by(name=away_id).first()
+                away_id = self.session.query(Team).filter_by(name_en=away_id).first()
             else:
                 away_id = self.session.query(Team).filter_by(id=away_id).first()
             if away_id:
@@ -139,7 +139,7 @@ class MatchPipeline(TeamPipeline):
 
             league_id = item["league_id"]
             if not league_id.isdigit():
-                league_id = self.session.query(League).filter_by(name=league_id).first()
+                league_id = self.session.query(League).filter_by(name_en=league_id).first()
             else:
                 league_id = self.session.query(League).filter_by(id=league_id).first()
             if league_id:
