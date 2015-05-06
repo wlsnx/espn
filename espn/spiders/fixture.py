@@ -33,7 +33,7 @@ class FixtureSpider(scrapy.Spider):
         team = response.meta["team"]
         seasons = response.xpath(".//*[@id='club-season-dropdown']/select/option/@value").extract()
         for season in seasons:
-            url = self.FIXTURE_URL.format(season=self.season, **team)
+            url = self.FIXTURE_URL.format(season=season, **team)
             yield scrapy.Request(url,
                                  meta={"team": team})
 
