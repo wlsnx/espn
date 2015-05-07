@@ -13,7 +13,7 @@ class FixtureSpider(scrapy.Spider):
     #)
 
     season = 2015
-    FIXTURE_URL = "http://www.espnfc.com/{type}/{espn_name}/{id}/fixtures?leagueId=0&season={season}"
+    FIXTURE_URL = "http://www.espnfc.com/{type}/{name_en}/{id}/fixtures?leagueId=0&season={season}"
     team_pat = re.compile("teamlogos/soccer/\d+/(\d+).png")
 
     def start_requests(self):
@@ -21,8 +21,9 @@ class FixtureSpider(scrapy.Spider):
         SERVER = self.settings.get("SERVER")
         if SERVER:
             db = dataset.connect(SERVER)
-            teams = db.query("select id, espn_name, type from yt_team")
+            teams = db.query("select id, name_en, type from yt_team")
             for team in teams:
+                team["name_en"] = team["name_en"].encode("utf-8")
                 url = self.FIXTURE_URL.format(season=self.season, **team)
                 yield scrapy.Request(url,
                                      meta={"team": team})

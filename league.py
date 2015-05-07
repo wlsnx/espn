@@ -33,11 +33,11 @@ def main():
                 group = matched.groupdict()
                 #type = group["type"]
                 id = group["id"]
-                espn_name = group["name"]
+                #espn_name = group["name"]
                 league = session.query(League).filter_by(name=name).first()
                 if league:
                     league.id = id
-                    league.espn_name = espn_name
+                    #league.espn_name = espn_name
                     #league.type = type
                     #session.add(league)
     session.commit()

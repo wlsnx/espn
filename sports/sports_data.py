@@ -32,7 +32,7 @@ class League(Base):
     short_name = sa.Column(sa.String(30))
     short_name_cn = sa.Column(sa.String(30))
     is_cup = sa.Column(sa.Boolean)
-    espn_name = sa.Column(sa.String(60))
+    #espn_name = sa.Column(sa.String(60))
 
 
 league_team = sa.Table("league_team",
@@ -63,7 +63,7 @@ class Team(Base, Item):
     league = relationship("League", secondary=league_team, backref="team")
     ground = sa.Column(sa.String(40))
     letter = sa.Column(sa.String(10))
-    espn_name = sa.Column(sa.String(60))
+    #espn_name = sa.Column(sa.String(60))
     player = relationship("TeamPlayer")
     #TODO:create player table
     #master = sa.Column(sa.Integer, sa.ForeignKey("yt_manager.id"))
@@ -120,17 +120,69 @@ class Match(Base, Item):
     away_id = sa.Column(sa.Integer, sa.ForeignKey("yt_team.id"))
     date = sa.Column(sa.Date)
     time = sa.Column(sa.Time)
+    m_time = sa.Column(sa.SmallInteger)
 
 
-import sys
-sys.path.append("..")
+class MatchFootball(Base, Item):
+
+    __tablename__ = "match_football"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    match_id = sa.Column(sa.Integer, sa.ForeignKey("yt_match.id"))
+    home_score = sa.Column(sa.SmallInteger)
+    away_score = sa.Column(sa.SmallInteger)
+    home_shot = sa.Column(sa.SmallInteger)
+    away_shot = sa.Column(sa.SmallInteger)
+    home_shots = sa.Column(sa.SmallInteger)
+    away_shots = sa.Column(sa.SmallInteger)
+    home_fouls = sa.Column(sa.SmallInteger)
+    away_fouls = sa.Column(sa.SmallInteger)
+    home_corner = sa.Column(sa.SmallInteger)
+    away_corner = sa.Column(sa.SmallInteger)
+    home_offside = sa.Column(sa.SmallInteger)
+    away_offside = sa.Column(sa.SmallInteger)
+    home_ball_possession = sa.Column(sa.SmallInteger)
+    away_ball_possession = sa.Column(sa.SmallInteger)
+    home_yellow_card = sa.Column(sa.SmallInteger)
+    away_yellow_card = sa.Column(sa.SmallInteger)
+    home_red_card = sa.Column(sa.SmallInteger)
+    away_red_card = sa.Column(sa.SmallInteger)
+    home_saving = sa.Column(sa.SmallInteger)
+    away_saving = sa.Column(sa.SmallInteger)
+    date = sa.Column(sa.Date)
+    time = sa.Column(sa.Time)
 
 
-from espn import settings
-SERVER = settings.SERVER
+class MatchFootballDetails(Base, Item):
+
+    __tablename__ = "match_football_details"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    match_id = sa.Column(sa.Integer, sa.ForeignKey("yt_match.id"))
+    min = sa.Column(sa.SmallInteger)
+    team = sa.Column(sa.SmallInteger)
+    type = sa.Column(sa.SmallInteger)
+    player_a = sa.Column(sa.String(30))
+    player_a_id = sa.Column(sa.Integer, sa.ForeignKey("yt_player.id"))
+    player_b = sa.Column(sa.String(30))
+    player_b_id = sa.Column(sa.Integer, sa.ForeignKey("yt_player.id"))
 
 
-db = sa.create_engine(SERVER)
-from sqlalchemy.orm import sessionmaker
-session = sessionmaker(db)
+class PlayerMatch(Base, Item):
+
+    __tablename__ = "player_match"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    match_id = sa.Column(sa.Integer, sa.ForeignKey("yt_match.id"))
+    player_id = sa.Column(sa.Integer, sa.ForeignKey("yt_player.id"))
+    fouls_commited = sa.Column(sa.SmallInteger)
+    fouls_suffered = sa.Column(sa.SmallInteger)
+    red_card = sa.Column(sa.SmallInteger)
+    yellow_card = sa.Column(sa.SmallInteger)
+    assists = sa.Column(sa.SmallInteger)
+    goals = sa.Column(sa.SmallInteger)
+    shots = sa.Column(sa.SmallInteger)
+    shots_goal = sa.Column(sa.SmallInteger)
+    offside = sa.Column(sa.SmallInteger)
+    saving = sa.Column(sa.SmallInteger)
 
