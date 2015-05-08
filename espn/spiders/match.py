@@ -103,7 +103,7 @@ class MatchSpider(SoccerSpider):
 
         match_detail = response.find("div", attrs={"class": "match-details"})
         if match_detail:
-            match["time"] = match_detail.span.text
+            match["time"] = match_detail.script.text
         score_time = response.find("div", attrs={"class": "score-time"})
         score= score_time.find("p", attrs={"class": "score"}).text.split("-")
         if len(score) == 2:
