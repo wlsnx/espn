@@ -166,11 +166,15 @@ class MatchPipeline(TeamPipeline):
                 else:
                     raise DropItem
 
-            if "home_score" in item:
+            if "home_score" in item and item["home_score"].isdigit():
                 item["home_score"] = int(item["home_score"])
+            else:
+                item.pop("home_score")
 
-            if "away_score" in item:
+            if "away_score" in item and item["away_score"].isdigit():
                 item["away_score"] = int(item["away_score"])
+            else:
+                item.pop("away_score")
 
             if "league_id" in item:
                 league_id = item["league_id"]
