@@ -255,8 +255,10 @@ class MatchFootballPipeline(TeamPipeline):
             if "away_ball_possession" in item:
                 item["away_ball_possession"] = item["away_ball_possession"][:-1]
 
-            item["home_score"] = int(item["home_score"])
-            item["away_score"] = int(item["away_score"])
+            if "home_score" in item:
+                item["home_score"] = int(item["home_score"])
+            if "away_score" in item:
+                item["away_score"] = int(item["away_score"])
 
             match_football = MatchFootball(**item)
             self.session.add(match_football)
