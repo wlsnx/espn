@@ -40,9 +40,13 @@ class TeamPipeline(object):
         SERVER = settings.get("SERVER")
         if not SERVER:
             raise NotConfigured
-        db = sa.create_engine(SERVER)
-        tp.Session = sessionmaker(db)
-        tp.session = tp.Session()
+        SESSION = settings.get("SESSION")
+        if SESSION:
+            tp.session = SESSION
+        else:
+            db = sa.create_engine(SERVER)
+            tp.Session = sessionmaker(db)
+            tp.session = tp.Session()
         AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
         if AUTO_COMMIT_INTERVAL:
             tp.AUTO_COMMIT_INTERVAL = AUTO_COMMIT_INTERVAL
@@ -210,6 +214,9 @@ class MatchDetailsPipeline(TeamPipeline):
             player_matched = self.player_id_pat.search(player_a_id)
             if player_matched:
                 item["player_a_id"] = player_matched.group(1)
+                player_a = self.session.query(Player).filter_by(id=item["player_a_id"]).count()
+                if not player_a:
+                    raise DropItem
                 if item["type"] == 4:
                     item["player_b"] = item["player_a"]
                     item["player_b_id"] = item["player_a_id"]
@@ -217,6 +224,8 @@ class MatchDetailsPipeline(TeamPipeline):
                     player_a_id = self.session.query(Player).filter_by(name_en=item["player_a"]).first()
                     if player_a_id:
                         item["player_a_id"] = player_a_id.id
+                    else:
+                        raise DropItem
             football_detail = MatchFootballDetails(**item)
             self.session.add(football_detail)
 
@@ -229,18 +238,22 @@ class MatchFootballPipeline(TeamPipeline):
 
     def process_item(self, item, spider):
         if isinstance(item, FootballItem):
-            home_shots = item["home_shots"]
-            home_shots_matched = self.shot_pat.search(home_shots)
-            item["home_shots"] = home_shots_matched.group(2)
-            item["home_shot"] = home_shots_matched.group(1)
+            if "home_shot" in item:
+                home_shots = item["home_shots"]
+                home_shots_matched = self.shot_pat.search(home_shots)
+                item["home_shots"] = home_shots_matched.group(2)
+                item["home_shot"] = home_shots_matched.group(1)
 
-            away_shots = item["away_shots"]
-            away_shots_matched = self.shot_pat.search(away_shots)
-            item["away_shots"] = away_shots_matched.group(2)
-            item["away_shot"] = away_shots_matched.group(1)
+            if "away_shots" in item:
+                away_shots = item["away_shots"]
+                away_shots_matched = self.shot_pat.search(away_shots)
+                item["away_shots"] = away_shots_matched.group(2)
+                item["away_shot"] = away_shots_matched.group(1)
 
-            item["home_ball_possession"] = item["home_ball_possession"][:-1]
-            item["away_ball_possession"] = item["away_ball_possession"][:-1]
+            if "home_ball_possession" in item:
+                item["home_ball_possession"] = item["home_ball_possession"][:-1]
+            if "away_ball_possession" in item:
+                item["away_ball_possession"] = item["away_ball_possession"][:-1]
 
             item["home_score"] = int(item["home_score"])
             item["away_score"] = int(item["away_score"])

@@ -111,14 +111,19 @@ class MatchSpider(SoccerSpider):
         match["m_time"] = score_time.find("p", attrs={"class": "time"}).text
         yield MatchItem(**match)
 
-        match_football_item = FootballItem(match_id=match["id"],
-                                           home_score=match["home_score"],
-                                           away_score=match["away_score"])
+        match_football_item = FootballItem(match_id=match["id"])
+        if "home_score" in match:
+            match_football_item["home_score"] = match["home_score"]
+            match_football_item["away_score"] = match["away_score"]
+                                           #home_score=match["home_score"],
+                                           #away_score=match["away_score"])
         for team in ("home", "away"):
             for item_key, html_key in self.stats.items():
                 item_key = "{}_{}".format(team, item_key)
                 html_key = "{}-{}".format(team, html_key)
-                match_football_item[item_key] = response.find("td", attrs={"id": html_key}).text
+                team_info = response.find("td", attrs={"id": html_key})
+                if team_info:
+                    match_football_item[item_key] = team_info.text
         yield match_football_item
 
         if match["m_time"] == "FT":
