@@ -146,46 +146,33 @@ class MatchPipeline(TeamPipeline):
                 else:
                     item.pop("m_time")
 
-            if "home_id" in item:
-                home_id = item["home_id"]
-                if isinstance(home_id, basestring) and not home_id.isdigit():
-                    home = self.session.query(Team).filter_by(name_en=home_id).first()
-                else:
-                    home = self.session.query(Team).filter_by(id=home_id).first()
-                if home:
-                    item["home_id"] = home.id
-                else:
-                    raise DropItem
+            for team in ("home_id", "away_id"):
+                if team in item:
+                    team_id = item[team]
+                    if isinstance(team_id, basestring) and not team_id.isdigit():
+                        _team = self.session.query(Team).filter_by(name_en=team_id).first()
+                    else:
+                        _team = self.session.query(Team).filter_by(id=team_id).first()
+                    if _team:
+                        item[team] = _team.id
+                    else:
+                        raise DropItem
 
-            if "away_id" in item:
-                away_id = item["away_id"]
-                if isinstance(home_id, basestring) and not away_id.isdigit():
-                    away = self.session.query(Team).filter_by(name_en=away_id).first()
-                else:
-                    away = self.session.query(Team).filter_by(id=away_id).first()
-                if away:
-                    item["away_id"] = away.id
-                else:
-                    raise DropItem
-
-            if "home_score" in item and item["home_score"].isdigit():
-                item["home_score"] = int(item["home_score"])
-            else:
-                item.pop("home_score")
-
-            if "away_score" in item and item["away_score"].isdigit():
-                item["away_score"] = int(item["away_score"])
-            else:
-                item.pop("away_score")
+            for score in ("home_score", "away_score"):
+                if score in item:
+                    if item[score].isdigit():
+                        item[score] = int(item[score])
+                    else:
+                        item.pop(score)
 
             if "league_id" in item:
                 league_id = item["league_id"]
                 if not league_id.isdigit():
-                    league_id = self.session.query(League).filter_by(name=league_id).first()
+                    league= self.session.query(League).filter_by(name=league_id).first()
                 else:
-                    league_id = self.session.query(League).filter_by(id=league_id).first()
-                if league_id:
-                    item["league_id"] = league_id.id
+                    league= self.session.query(League).filter_by(id=league_id).first()
+                if league:
+                    item["league_id"] = league.id
                 else:
                     item.pop("league_id")
 
