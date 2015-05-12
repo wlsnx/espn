@@ -244,7 +244,7 @@ class MatchFootballPipeline(TeamPipeline):
 
     def process_item(self, item, spider):
         if isinstance(item, FootballItem):
-            if "home_shot" in item:
+            if "home_shots" in item:
                 home_shots = item["home_shots"]
                 home_shots_matched = self.shot_pat.search(home_shots)
                 item["home_shots"] = home_shots_matched.group(2)
