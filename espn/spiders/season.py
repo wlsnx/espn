@@ -56,7 +56,7 @@ class SeasonSpider(scrapy.Spider):
         score = response.xpath("//p[@class='score']/text()").extract()[0]
         scores = score.split("-")
         if len(scores) == 2:
-            match["away_score"], match["home_score"] = scores
+            match["home_score"], match["away_score"] = scores
         match["m_time"] = response.xpath("//p[@class='time']/text()").extract()[0]
         match["time"] = response.xpath("//div[@class='match-details']//script/text()").extract()[0]
 
