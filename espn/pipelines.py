@@ -112,7 +112,7 @@ class PlayerPipeline(TeamPipeline):
 class MatchPipeline(TeamPipeline):
 
     status = {"FT": 2}
-    time_pat = re.compile("Date\((\d+)\)")
+    time_pat = re.compile("Date\((-?\d+)\)")
     m_time_pat = re.compile("(\d+)\'")
 
     def process_item(self, item, spider):
