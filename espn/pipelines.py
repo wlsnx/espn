@@ -131,8 +131,8 @@ class MatchPipeline(TeamPipeline):
                 matched = self.time_pat.search(time)
                 if matched:
                     time = datetime.fromtimestamp(int(matched.group(1))/1000)
-                    item["time"] = time
-                    item["date"] = time
+                    item["time"] = time.time()
+                    item["date"] = time.date()
 
             if "m_time" in item:
                 m_time = item["m_time"]
