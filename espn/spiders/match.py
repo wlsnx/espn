@@ -107,7 +107,7 @@ class MatchSpider(SoccerSpider):
         score_time = response.find("div", attrs={"class": "score-time"})
         score= score_time.find("p", attrs={"class": "score"}).text.split("-")
         if len(score) == 2:
-             match["away_score"], match["home_score"] = score
+             match["home_score"], match["away_score"] = score
         match["m_time"] = score_time.find("p", attrs={"class": "time"}).text
         yield MatchItem(**match)
 
