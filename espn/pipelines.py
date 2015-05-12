@@ -121,10 +121,10 @@ class MatchPipeline(TeamPipeline):
             finish = self.status[finish] if finish in self.status else 0
             item["finish"] = finish
 
-            date = item.get("date", None)
-            if isinstance(date, basestring):
-                date = datetime.strptime(date, "%b %d, %Y")
-                item["date"] = date
+            #date = item.get("date", None)
+            #if isinstance(date, basestring):
+                #date = datetime.strptime(date, "%b %d, %Y")
+                #item["date"] = date
 
             time = item.get("time", None)
             if time:
@@ -132,6 +132,7 @@ class MatchPipeline(TeamPipeline):
                 if matched:
                     time = datetime.fromtimestamp(int(matched.group(1))/1000)
                     item["time"] = time
+                    item["date"] = time
 
             if "m_time" in item:
                 m_time = item["m_time"]
@@ -141,6 +142,7 @@ class MatchPipeline(TeamPipeline):
                 if matched:
                     m_time = matched.group(1)
                     item["m_time"] = m_time
+                    item["finish"] = 1
                 else:
                     item.pop("m_time")
 
