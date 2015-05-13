@@ -114,6 +114,7 @@ class MatchPipeline(TeamPipeline):
     status = {"FT": 2}
     time_pat = re.compile("Date\((-?\d+)\)")
     m_time_pat = re.compile("(\d+)\'")
+    score_pat = re.compile("(\d+)")
 
     def process_item(self, item, spider):
         if isinstance(item, MatchItem):
@@ -161,8 +162,13 @@ class MatchPipeline(TeamPipeline):
 
             for score in ("home_score", "away_score"):
                 if score in item:
+                    team_score = item[score]
+                    if "(" in team_score:
+                        matched = self.score_pat.search(team_score)
+                        if matched:
+                            team_score = matched.group(1)
                     try:
-                        item[score] = int(item[score])
+                        item[score] = int(team_score)
                     except ValueError:
                         item.pop(score)
 
