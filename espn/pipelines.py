@@ -149,10 +149,11 @@ class MatchPipeline(TeamPipeline):
             for team in ("home_id", "away_id"):
                 if team in item:
                     team_id = item[team]
-                    if isinstance(team_id, basestring) and not team_id.isdigit():
-                        _team = self.session.query(Team).filter_by(name_en=team_id).first()
-                    else:
+                    try:
+                        team_id = int(team_id)
                         _team = self.session.query(Team).filter_by(id=team_id).first()
+                    except ValueError:
+                        _team = self.session.query(Team).filter_by(name_en=team_id).first()
                     if _team:
                         item[team] = _team.id
                     else:
@@ -160,17 +161,18 @@ class MatchPipeline(TeamPipeline):
 
             for score in ("home_score", "away_score"):
                 if score in item:
-                    if item[score].isdigit():
+                    try:
                         item[score] = int(item[score])
-                    else:
+                    except ValueError:
                         item.pop(score)
 
             if "league_id" in item:
                 league_id = item["league_id"]
-                if not league_id.isdigit():
-                    league= self.session.query(League).filter_by(name=league_id).first()
-                else:
+                try:
+                    league_id = int(league_id)
                     league= self.session.query(League).filter_by(id=league_id).first()
+                except ValueError:
+                    league= self.session.query(League).filter_by(name=league_id).first()
                 if league:
                     item["league_id"] = league.id
                 else:

@@ -47,10 +47,11 @@ class SeasonSpider(scrapy.Spider):
 
     def parse_match(self, response):
         match = response.meta["match"]
-        away_id = response.xpath("//div[@class='team home']/@id").extract()[0]
+        home_id, away_id = response.xpath("//div[contains(@id, 'teamId')]/@id").extract()
+        #away_id = response.xpath("//div[@class='team home']/@id").extract()[0]
         away_id = away_id.split("-")[1]
         match["away_id"] = away_id
-        home_id = response.xpath("//div[@class='team away']/@id").extract()[0]
+        #home_id = response.xpath("//div[@class='team away']/@id").extract()[0]
         home_id = home_id.split("-")[1]
         match["home_id"] = home_id
         score = response.xpath("//p[@class='score']/text()").extract()[0]
