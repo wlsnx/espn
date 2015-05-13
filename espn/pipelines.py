@@ -233,27 +233,26 @@ class MatchFootballPipeline(TeamPipeline):
 
     def process_item(self, item, spider):
         if isinstance(item, FootballItem):
-            if "home_shots" in item:
-                home_shots = item["home_shots"]
-                home_shots_matched = self.shot_pat.search(home_shots)
-                item["home_shots"] = home_shots_matched.group(2)
-                item["home_shot"] = home_shots_matched.group(1)
+            for team in ("home", "away"):
+                team_shots_key = "{}_shots".format(team)
+                if team_shots_key in item:
+                    team_shot_key = "{}_shot".format(team)
+                    team_shots = item[team_shots_key]
+                    team_shots_matched = self.shot_pat.search(team_shots)
+                    if team_shots_matched:
+                        item[team_shots_key] = team_shots_matched.group(2)
+                        item[team_shot_key] = team_shots_matched.group(1)
 
-            if "away_shots" in item:
-                away_shots = item["away_shots"]
-                away_shots_matched = self.shot_pat.search(away_shots)
-                item["away_shots"] = away_shots_matched.group(2)
-                item["away_shot"] = away_shots_matched.group(1)
+                team_possession_key = "{}_ball_possession".format(team)
+                if team_possession_key in item:
+                    item[team_possession_key] = item[team_possession_key][:-1]
 
-            if "home_ball_possession" in item:
-                item["home_ball_possession"] = item["home_ball_possession"][:-1]
-            if "away_ball_possession" in item:
-                item["away_ball_possession"] = item["away_ball_possession"][:-1]
-
-            if "home_score" in item:
-                item["home_score"] = int(item["home_score"])
-            if "away_score" in item:
-                item["away_score"] = int(item["away_score"])
+                team_score_key = "{}_score".format(team)
+                if team_score_key in item:
+                    try:
+                        item[team_score_key] = int(item[team_score_key])
+                    except ValueError:
+                        item.pop(team_score_key)
 
             match_football = MatchFootball(**item)
             self.session.add(match_football)
