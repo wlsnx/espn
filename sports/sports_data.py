@@ -101,7 +101,7 @@ class Player(Base, Item):
     weight = sa.Column(sa.Float())
     country = sa.Column(sa.String(30))
     country_en = sa.Column(sa.String(30))
-    birthday = sa.Column(sa.DateTime())
+    birthday = sa.Column(sa.Date())
     #age = sa.Column(sa.SmallInteger)
     team = relationship("TeamPlayer")
 
