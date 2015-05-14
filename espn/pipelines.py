@@ -172,7 +172,7 @@ class MatchPipeline(TeamPipeline):
                 #item["date"] = date
 
             time = item.get("time", None)
-            if time:
+            if time is not None and isinstance(time, basestring):
                 matched = self.time_pat.search(time)
                 if matched:
                     time = datetime.fromtimestamp(int(matched.group(1))/1000)
