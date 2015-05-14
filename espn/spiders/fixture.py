@@ -40,7 +40,7 @@ class FixtureSpider(scrapy.Spider):
 
     def parse_fixture(self, response):
         #team = response.meta["team"]
-        response = bs(response.body)
+        response = bs(response.body, ["lxml"])
         fixtures = response.find_all("a", attrs={"class": "score-list"})
         for fixture in fixtures:
             espn_id = fixture.get("data-gameid")

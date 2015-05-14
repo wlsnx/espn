@@ -155,16 +155,13 @@ class PlayerPipeline(TeamPipeline):
 
 class MatchPipeline(TeamPipeline):
 
-    status = {"FT": 2}
+    status = {"FT": 2, "Postponed": 0}
     time_pat = re.compile("Date\((-?\d+)\)")
     m_time_pat = re.compile("(\d+)\'")
     score_pat = re.compile("(\d+)")
 
     def process_item(self, item, spider):
         if isinstance(item, MatchItem):
-            finish = item.get("finish", None)
-            finish = self.status[finish] if finish in self.status else 0
-            item["finish"] = finish
 
             #date = item.get("date", None)
             #if isinstance(date, basestring):
@@ -181,8 +178,8 @@ class MatchPipeline(TeamPipeline):
 
             if "m_time" in item:
                 m_time = item["m_time"]
-                if m_time == "FT":
-                    item["finish"] = 2
+                if m_time in self.status:
+                    item["finish"] = self.status[m_time]
                 matched = self.m_time_pat.search(m_time)
                 if matched:
                     m_time = matched.group(1)
@@ -190,6 +187,10 @@ class MatchPipeline(TeamPipeline):
                     item["finish"] = 1
                 else:
                     item.pop("m_time")
+
+            finish = item.get("finish", None)
+            finish = self.status[finish] if finish in self.status else 0
+            item["finish"] = finish
 
             for team in ("home_id", "away_id"):
                 if team in item:

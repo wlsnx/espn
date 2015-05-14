@@ -13,6 +13,8 @@ class MatchSpider(SoccerSpider):
         #'http://www.espnfc.com/',
     #)
 
+    finished = ("FT", "Postponed")
+
     sql = "select id, espn_id, date, time from yt_match where date=date(now()) and finish <> 2"
     LIVE = "http://www.espnfc.com/gamecast/statistics/id/{}/statistics.html"
 
@@ -52,7 +54,7 @@ class MatchSpider(SoccerSpider):
 
     def parse_match(self, response):
         match = response.meta["match"]
-        response = bs(response.body)
+        response = bs(response.body, ["lxml"])
 
         #goals = response.find_all("div", attrs={"class": "span-3"})
         #if len(goals) == 2:
@@ -102,13 +104,14 @@ class MatchSpider(SoccerSpider):
                                 break
 
         match_detail = response.find("div", attrs={"class": "match-details"})
-        if match_detail:
+        if match_detail and match_detail.script:
             match["time"] = match_detail.script.text
         score_time = response.find("div", attrs={"class": "score-time"})
-        score= score_time.find("p", attrs={"class": "score"}).text.split("-")
-        if len(score) == 2:
-             match["home_score"], match["away_score"] = score
-        match["m_time"] = score_time.find("p", attrs={"class": "time"}).text
+        if score_time:
+            score= score_time.find("p", attrs={"class": "score"}).text.split("-")
+            if len(score) == 2:
+                match["home_score"], match["away_score"] = score
+            match["m_time"] = score_time.find("p", attrs={"class": "time"}).text
         yield MatchItem(**match)
 
         match_football_item = FootballItem(match_id=match["id"])
@@ -126,6 +129,6 @@ class MatchSpider(SoccerSpider):
                     match_football_item[item_key] = team_info.text
         yield match_football_item
 
-        if match["m_time"] == "FT":
+        if "m_time" not in match or match["m_time"] in self.finished:
             raise MatchFinished()
 

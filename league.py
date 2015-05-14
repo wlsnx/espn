@@ -22,8 +22,8 @@ def main():
     data = requests.get("http://www.espnfc.com/api/navigation?xhr=1")
     data = json.loads(data.content)
     nav = data["navigationItems"]
-    league = bs(nav[4]["html"])
-    cup = bs(nav[5]["html"])
+    league = bs(nav[4]["html"], ["lxml"])
+    cup = bs(nav[5]["html"], ["lxml"])
     for link in chain(league.find_all("a"), cup.find_all("a")):
         href = link.get("href")
         if href.endswith("index"):

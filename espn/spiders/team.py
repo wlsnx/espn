@@ -26,9 +26,9 @@ class TeamSpider(scrapy.Spider):
         data = json.loads(response.body)
         nav = data["navigationItems"]
         league = nav[4]["html"]
-        league = bs(league)
+        league = bs(league, ["lxml"])
         cup = nav[5]["html"]
-        cup = bs(cup)
+        cup = bs(cup, ["lxml"])
         for link in chain(league.find_all("a"), cup.find_all("a")):
             href = link.get("href")
             if href.endswith("index"):
@@ -37,7 +37,7 @@ class TeamSpider(scrapy.Spider):
                                      callback=self.parse_team)
 
     def parse_team(self, response):
-        data = bs(response.body)
+        data = bs(response.body, ["lxml"])
         teams = data.find("li", {"data-section": "clubs"})
         teams = teams.ul.find_all("li")
         league = re.match(".*?/(\d+)/index", response.url)

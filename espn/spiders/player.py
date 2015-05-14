@@ -34,7 +34,7 @@ class PlayerSpider(Spider):
 
     def parse_player(self, response):
         player = response.meta["player"]
-        response = bs(response.body)
+        response = bs(response.body, ["lxml"])
         athlete = response.find("div", attrs={"id": "athlete-page"})
         dl1, dl2 = athlete.find_all("dl")
         dd1 = [dd.text for dd in dl1.find_all("dd")]
@@ -51,7 +51,7 @@ class PlayerSpider(Spider):
 
     def parse(self, response):
         team_id = response.meta["team_id"]
-        response = bs(response.body)
+        response = bs(response.body, ["lxml"])
         tables = response.find_all("div", attrs={"class": "responsive-table-content"})
         trs = [tr for table in tables for tr in table.find_all("tr") if not tr.has_attr("class")]
         for tr in trs:
