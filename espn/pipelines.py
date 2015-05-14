@@ -18,6 +18,50 @@ from twisted.internet import reactor
 #from espn.spiders.team import TeamSpider
 
 
+class DictCache(dict):
+
+    def set(self, key, value, ex=None):
+        if ex is not None and key not in self:
+            reactor.callLater(ex, self.delete, key)
+        self[key] = value.copy()
+
+    def equal(self, item, old_item):
+        for key, value in item.items():
+            if not (key in old_item and old_item[key] == value):
+                return False
+        return True
+
+    def get(self, key):
+        return super(DictCache, self).get(key, None)
+
+    def delete(self, key):
+        if key in self:
+            del self[key]
+
+    def flushall(self):
+        self.clear()
+
+    def cache(self, prefix="", fields=(), cls=None, ex=3600 * 2):
+        def wrap(func):
+            def process_item(pipeline, item, spider=None):
+                if cls is not None and not isinstance(item, cls):
+                    return item
+                key = prefix
+                for field in fields:
+                    key += u":{}".format(item.get(field, ""))
+                old_item = self.get(key)
+                if old_item is not None and self.equal(item, old_item):
+                    raise DropItem
+                else:
+                    self.set(key, item, ex)
+                    return func(pipeline, item, spider)
+            return process_item
+        return wrap
+
+
+dict_cache = DictCache()
+
+
 class TeamPipeline(object):
 
     def process_item(self, item, spider):
@@ -198,6 +242,9 @@ class MatchDetailsPipeline(TeamPipeline):
     min_pat = re.compile(r"(?P<base>\d+)(?: \+ )?(?P<extra>\d+)?\\\'(?:<br />Off: )?(?P<player>.*)\'")
     player_id_pat = re.compile(r"/player/(\d+)/.*")
 
+    @dict_cache.cache(prefix="match_details",
+                      fields=("match_id", "player_a_id", "player_b_id", "team", "type"),
+                      cls=FootballDetailsItem)
     def process_item(self, item, spider):
         if isinstance(item, FootballDetailsItem):
             min = item["min"]
@@ -227,8 +274,13 @@ class MatchDetailsPipeline(TeamPipeline):
                         item["player_a_id"] = player_a_id.id
                     else:
                         raise DropItem
-            football_detail = MatchFootballDetails(**item)
-            self.session.add(football_detail)
+
+            existed = self.session.query(MatchFootballDetails).filter_by(**item).first()
+            if not existed:
+                football_detail = MatchFootballDetails(**item)
+                self.session.add(football_detail)
+            else:
+                existed.update(**item)
 
         return item
 
@@ -237,6 +289,7 @@ class MatchFootballPipeline(TeamPipeline):
 
     shot_pat = re.compile(r"(\d+)\((\d+)\)")
 
+    @dict_cache.cache(prefix="match_football", fields=("match_id", ), cls=FootballItem)
     def process_item(self, item, spider):
         if isinstance(item, FootballItem):
             for team in ("home", "away"):
@@ -260,8 +313,12 @@ class MatchFootballPipeline(TeamPipeline):
                     except ValueError:
                         item.pop(team_score_key)
 
-            match_football = MatchFootball(**item)
-            self.session.add(match_football)
+            existed = self.session.query(MatchFootball).filter_by(match_id=item["match_id"]).first()
+            if not existed:
+                match_football = MatchFootball(**item)
+                self.session.add(match_football)
+            else:
+                existed.update(**item)
 
         return item
 
@@ -270,6 +327,7 @@ class PlayerMatchPipeline(TeamPipeline):
 
     player_id_pat = re.compile(r"/player/(\d+)/.*")
 
+    @dict_cache.cache(prefix="player_match", fields=("player_id", "match_id"), cls=PlayerMatchItem)
     def process_item(self, item, spider):
         if isinstance(item, PlayerMatchItem):
             player_id = item["player_id"]
@@ -283,8 +341,13 @@ class PlayerMatchPipeline(TeamPipeline):
                 if isinstance(value, basestring):
                     item[key] = re.sub("\s", "", value)
 
-            player_match = PlayerMatch(**item)
-            self.session.add(player_match)
+            existed = self.session.query(PlayerMatch).filter_by(player_id=item["player_id"],
+                                                                match_id=item["match_id"]).first()
+            if not existed:
+                player_match = PlayerMatch(**item)
+                self.session.add(player_match)
+            else:
+                existed.update(**item)
 
         return item
 
