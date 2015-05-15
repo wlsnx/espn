@@ -155,7 +155,7 @@ class PlayerPipeline(TeamPipeline):
 
 class MatchPipeline(TeamPipeline):
 
-    status = {"FT": 2, "Postponed": 0}
+    status = {"FT": 2, "Postponed": 0, "Abandoned": 2}
     time_pat = re.compile("Date\((-?\d+)\)")
     m_time_pat = re.compile("(\d+)\'")
     score_pat = re.compile("(\d+)")
@@ -190,8 +190,9 @@ class MatchPipeline(TeamPipeline):
                     item.pop("m_time")
 
             finish = item.get("finish", None)
-            finish = self.status[finish] if finish in self.status else 0
-            item["finish"] = finish
+            if not isinstance(finish, int) and 0 <= finish <= 2:
+                finish = self.status[finish] if finish in self.status else 0
+                item["finish"] = finish
 
             for team in ("home_id", "away_id"):
                 if team in item:

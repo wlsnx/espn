@@ -13,7 +13,7 @@ class MatchSpider(SoccerSpider):
         #'http://www.espnfc.com/',
     #)
 
-    finished = ("FT", "Postponed")
+    finished = ("FT", "Postponed", "Abandoned")
 
     sql = "select id, espn_id, date, time from yt_match where date=date(now()) and finish <> 2"
     LIVE = "http://www.espnfc.com/gamecast/statistics/id/{}/statistics.html"
