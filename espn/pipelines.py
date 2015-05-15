@@ -160,6 +160,7 @@ class MatchPipeline(TeamPipeline):
     m_time_pat = re.compile("(\d+)\'")
     score_pat = re.compile("(\d+)")
 
+    @dict_cache.cache(prefix="match", fields=sorted(MatchItem.fields), cls=MatchItem)
     def process_item(self, item, spider):
         if isinstance(item, MatchItem):
 
@@ -208,6 +209,9 @@ class MatchPipeline(TeamPipeline):
             for score in ("home_score", "away_score"):
                 if score in item:
                     team_score = item[score]
+                    if "P" in team_score:
+                        item.pop(score)
+                        continue
                     if "(" in team_score:
                         matched = self.score_pat.search(team_score)
                         if matched:
@@ -244,7 +248,7 @@ class MatchDetailsPipeline(TeamPipeline):
     player_id_pat = re.compile(r"/player/(\d+)/.*")
 
     @dict_cache.cache(prefix="match_details",
-                      fields=("match_id", "player_a_id", "player_b_id", "team", "type"),
+                      fields=sorted(FootballDetailsItem.fields),
                       cls=FootballDetailsItem)
     def process_item(self, item, spider):
         if isinstance(item, FootballDetailsItem):
@@ -328,7 +332,7 @@ class PlayerMatchPipeline(TeamPipeline):
 
     player_id_pat = re.compile(r"/player/(\d+)/.*")
 
-    @dict_cache.cache(prefix="player_match", fields=("player_id", "match_id"), cls=PlayerMatchItem)
+    @dict_cache.cache(prefix="player_match", fields=sorted(PlayerMatchItem.fields), cls=PlayerMatchItem)
     def process_item(self, item, spider):
         if isinstance(item, PlayerMatchItem):
             player_id = item["player_id"]
