@@ -89,6 +89,7 @@ class SoccerSpider(Spider):
         self.matches = list(self.db.query(self.sql))
         self.CLOSE_ON_IDLE = self.settings.getbool("CLOSE_ON_IDLE", True)
         #log.start_from_crawler(self.crawl)
+        self.PER_MATCH_TIMEOUT = self.settings.getint("PER_MATCH_TIMEOUT", 3600 * 3)
 
     def generate_requests(self):
         """It must return an iterable object"""
@@ -113,26 +114,30 @@ class SoccerSpider(Spider):
     def _parse_match(self, response):
         """It will repeat every <self.SCRAPE_INTERVAL> seconds"""
         self.task_done()
-        try:
-            for item in self._parse_live(response):
-                yield item
-            reactor.callLater(self.SCRAPE_INTERVAL,
-                              self.crawler.engine.schedule,
-                              request=response.request,
-                              spider=self)
-            self.get_task()
-        #except MatchFinished:
-            #pass
-        except Exception as e:
-            self.log(e)
-            if not isinstance(e, MatchFinished):
-                if self.settings.getbool("DEBUG"):
-                    raise
+        request = response.request
+        per_match_timeout = request.meta.get("per_match_timeout", 0)
+        if per_match_timeout < self.PER_MATCH_TIMEOUT:
+            request.meta["per_match_timeout"] = per_match_timeout + self.SCRAPE_INTERVAL
+            try:
+                for item in self._parse_live(response):
+                    yield item
                 reactor.callLater(self.SCRAPE_INTERVAL,
                                 self.crawler.engine.schedule,
-                                request=response.request,
+                                request=request,
                                 spider=self)
                 self.get_task()
+            #except MatchFinished:
+                #pass
+            except Exception as e:
+                self.log(e)
+                if not isinstance(e, MatchFinished):
+                    if self.settings.getbool("DEBUG"):
+                        raise
+                    reactor.callLater(self.SCRAPE_INTERVAL,
+                                    self.crawler.engine.schedule,
+                                    request=request,
+                                    spider=self)
+                    self.get_task()
 
     def spider_idle(self, spider):
         """This spider will not close if it has any tasks or you set CLOSE_ON_IDLE to False"""

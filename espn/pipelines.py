@@ -347,6 +347,10 @@ class PlayerMatchPipeline(TeamPipeline):
                 if isinstance(value, basestring):
                     item[key] = re.sub("\s", "", value)
 
+            for key, value in item:
+                if value == "-":
+                    item.pop(key)
+
             existed = self.session.query(PlayerMatch).filter_by(player_id=item["player_id"],
                                                                 match_id=item["match_id"]).first()
             if not existed:
