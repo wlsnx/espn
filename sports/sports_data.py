@@ -149,8 +149,8 @@ class MatchFootball(Base, Item):
     away_red_card = sa.Column(sa.SmallInteger)
     home_saving = sa.Column(sa.SmallInteger)
     away_saving = sa.Column(sa.SmallInteger)
-    date = sa.Column(sa.Date)
-    time = sa.Column(sa.Time)
+    #date = sa.Column(sa.Date)
+    #time = sa.Column(sa.Time)
 
 
 class MatchFootballDetails(Base, Item):
