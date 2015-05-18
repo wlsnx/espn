@@ -347,7 +347,7 @@ class PlayerMatchPipeline(TeamPipeline):
                 if isinstance(value, basestring):
                     item[key] = re.sub("\s", "", value)
 
-            for key, value in item:
+            for key, value in item.items():
                 if value == "-":
                     item.pop(key)
 
