@@ -69,7 +69,7 @@ class SoccerSpider(Spider):
         request = Request(self.LIVE.format(mid),
                           dont_filter=True,
                           callback=self.parse_match,
-                          meta=dict(match=match))
+                          meta=dict(match=match.copy()))
         wait_seconds = self.wait_match(match)
         if wait_seconds >= 0:
             reactor.callLater(wait_seconds,
