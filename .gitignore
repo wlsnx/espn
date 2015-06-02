@@ -1,3 +1,7 @@
 *.pyc
 alembic.ini
 settings.py
+eggs/
+project.egg-info/
+build/
+
