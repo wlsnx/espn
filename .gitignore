@@ -4,4 +4,5 @@ settings.py
 eggs/
 project.egg-info/
 build/
+setup.py
 
