@@ -11,7 +11,7 @@ class SeasonSpider(scrapy.Spider):
     allowed_domains = ['espnfc.com']
     #start_urls = ['http://www.espnfc.com/scores']
 
-    custom_settings = {"CLOSESPIDER_PAGECOUNT": 366}
+    #custom_settings = {"CLOSESPIDER_PAGECOUNT": 366}
 
     statistics_url = "http://www.espnfc.com/gamecast/statistics/id/{}/statistics.html"
 
@@ -29,11 +29,19 @@ class SeasonSpider(scrapy.Spider):
     #def parse_start_request(self, response):
         #return self.parse_season(response)
 
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        cls.SEASON_PAGE_COUNT = crawler.settings.getint("SEASON_PAGE_COUNT", 366)
+        return cls(*args, **kwargs)
+
     def parse(self, response):
         #match_loader = EspnLoader(MatchItem())
         leagues = response.xpath("//div[@class='score-league']")
         for league in leagues:
-            league_id = league.xpath("@data-league-id").extract()[0]
+            try:
+                league_id = league.xpath("@data-league-id").extract()[0]
+            except IndexError:
+                break
             games = league.xpath(".//div[@class='score full']")
             for game in games:
                 match_id = game.xpath("@data-gameid").extract()[0]
@@ -42,8 +50,10 @@ class SeasonSpider(scrapy.Spider):
                 yield scrapy.Request(self.statistics_url.format(match_id),
                                      callback=self.parse_match,
                                      meta={"match": match})
-        tomorrow = response.xpath("//a[@class='next']/@href").extract()[0]
-        yield scrapy.Request(tomorrow)
+        page_count = response.meta.get("page_count", 0)
+        if page_count < self.SEASON_PAGE_COUNT:
+            tomorrow = response.xpath("//a[@class='next']/@href").extract()[0]
+            yield scrapy.Request(tomorrow, meta={"page_count": page_count + 1})
 
     def parse_match(self, response):
         match = response.meta["match"]

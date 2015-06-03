@@ -26,6 +26,8 @@ class DictCache(dict):
         self[key] = value.copy()
 
     def equal(self, item, old_item):
+        if len(item) != len(old_item):
+            return False
         for key, value in item.items():
             if not (key in old_item and old_item[key] == value):
                 return False
@@ -62,6 +64,35 @@ class DictCache(dict):
 dict_cache = DictCache()
 
 
+class DatabasePipeline(object):
+
+    @classmethod
+    def from_settings(cls, settings):
+        tp = cls()
+        SERVER = settings.get("SERVER")
+        if not SERVER:
+            raise NotConfigured
+        SESSION = settings.get("SESSION")
+        if SESSION:
+            tp.session = SESSION
+        else:
+            db = sa.create_engine(SERVER)
+            tp.Session = sessionmaker(db)
+            tp.session = tp.Session()
+        AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
+        if AUTO_COMMIT_INTERVAL:
+            tp.AUTO_COMMIT_INTERVAL = AUTO_COMMIT_INTERVAL
+            reactor.callLater(tp.AUTO_COMMIT_INTERVAL, tp.auto_commit)
+        return tp
+
+    def auto_commit(self):
+        self.session.commit()
+        reactor.callLater(self.AUTO_COMMIT_INTERVAL, self.auto_commit)
+
+    def close_spider(self, spider):
+        self.session.commit()
+
+
 class TeamPipeline(object):
 
     def process_item(self, item, spider):
@@ -91,18 +122,7 @@ class TeamPipeline(object):
             db = sa.create_engine(SERVER)
             tp.Session = sessionmaker(db)
             tp.session = tp.Session()
-        AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
-        if AUTO_COMMIT_INTERVAL:
-            tp.AUTO_COMMIT_INTERVAL = AUTO_COMMIT_INTERVAL
-            reactor.callLater(tp.AUTO_COMMIT_INTERVAL, tp.auto_commit)
         return tp
-
-    def auto_commit(self):
-        self.session.commit()
-        reactor.callLater(self.AUTO_COMMIT_INTERVAL, self.auto_commit)
-
-    def close_spider(self, spider):
-        self.session.commit()
 
 
 import re
