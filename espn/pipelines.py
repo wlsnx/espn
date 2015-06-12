@@ -352,6 +352,7 @@ class MatchFootballPipeline(TeamPipeline):
 class PlayerMatchPipeline(TeamPipeline):
 
     player_id_pat = re.compile(r"/player/(\d+)/.*")
+    min_pat = re.compile(r"(?P<base>\d+)(?: \+ )?(?P<extra>\d+)?\\\'(?:<br />Off: )?(?P<player>.*)\'")
 
     @dict_cache.cache(prefix="player_match", fields=sorted(PlayerMatchItem.fields), cls=PlayerMatchItem)
     def process_item(self, item, spider):
@@ -370,6 +371,13 @@ class PlayerMatchPipeline(TeamPipeline):
             for key, value in item.items():
                 if value == "-":
                     item.pop(key)
+
+            appear = item["appear"]
+            if isinstance(appear, basestring):
+                appear_matched = self.min_pat.search(appear)
+                if appear_matched:
+                    appear = int(appear_matched.groupdict()["base"])
+                    item["appear"] = appear
 
             existed = self.session.query(PlayerMatch).filter_by(player_id=item["player_id"],
                                                                 match_id=item["match_id"]).first()

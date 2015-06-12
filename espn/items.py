@@ -115,4 +115,5 @@ class PlayerMatchItem(Item):
     shots_goal = scrapy.Field()
     saving = scrapy.Field()
     offside = scrapy.Field()
+    appear = scrapy.Field()
 

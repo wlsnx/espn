@@ -186,4 +186,5 @@ class PlayerMatch(Base, Item):
     shots_goal = sa.Column(sa.SmallInteger, default=0)
     offside = sa.Column(sa.SmallInteger, default=0)
     saving = sa.Column(sa.SmallInteger, default=0)
+    appear = sa.Column(sa.SmallInteger, default=0)
 

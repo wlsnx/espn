@@ -70,12 +70,16 @@ class MatchSpider(SoccerSpider):
                                               #match_id=match["id"],
                                               #player_a_id=player_a_id)
 
-        from itertools import chain
+        #from itertools import chain
         player_stats = response.find_all("table", attrs={"class": "stat-table"})
         for team, table in enumerate(player_stats, 1):
-            for tr in chain(table.find_all("tr", attrs={"class": "odd"}),
-                            table.find_all("tr", attrs={"class": ""})):
+            appear = 1
+            for tr in table.find_all("tr"):
                 player_info = tr.find_all("td")
+
+                if "class" in tr.attrs and "subheader" in tr.attrs["class"]:
+                    appear = 0
+
                 if len(player_info) == 13:
                     name = player_info[2]
                     a = name.a
@@ -83,12 +87,11 @@ class MatchSpider(SoccerSpider):
                     player_a_name = a.get("title")
 
                     player_match = PlayerMatchItem(match_id=match["id"],
+                                                   appear=appear,
                                                    player_id=player_a_id)
 
                     for index, stat in enumerate(self.player_match_cols, 3):
                         player_match[stat] = player_info[index].text
-
-                    yield player_match
 
                     events = name.find_all("div", attrs={"class": "soccer-icons"})
                     for event in events:
@@ -101,7 +104,12 @@ class MatchSpider(SoccerSpider):
                                                           type=v,
                                                           match_id=match["id"],
                                                           player_a_id=player_a_id)
+
+                                if v == 4:
+                                    player_match["appear"] = min
                                 break
+
+                    yield player_match
 
         match_detail = response.find("div", attrs={"class": "match-details"})
         if match_detail and match_detail.script:
