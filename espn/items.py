@@ -98,7 +98,7 @@ class FootballDetailsItem(Item):
     type = scrapy.Field()
     player_a = scrapy.Field()
     player_a_id = scrapy.Field()
-    player_b = scrapy.Field()
+    player_b = scrapy.Field(default=0)
     player_b_id = scrapy.Field()
 
 
