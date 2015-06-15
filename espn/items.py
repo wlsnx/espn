@@ -31,7 +31,7 @@ class TeamItem(Item):
     city = scrapy.Field()
     id = scrapy.Field()
     type = scrapy.Field()
-    league_id = scrapy.Field(default=0)
+    league_id = scrapy.Field()
     espn_name = scrapy.Field()
 
 
@@ -60,7 +60,7 @@ class MatchItem(Item):
     away_id = scrapy.Field()
     home_score = scrapy.Field()
     away_score = scrapy.Field()
-    league_id = scrapy.Field(default=0)
+    league_id = scrapy.Field()
     espn_id = scrapy.Field()
     time = scrapy.Field()
     m_time = scrapy.Field()
@@ -99,7 +99,7 @@ class FootballDetailsItem(Item):
     player_a = scrapy.Field()
     player_a_id = scrapy.Field()
     player_b = scrapy.Field(default="")
-    player_b_id = scrapy.Field(default=0)
+    player_b_id = scrapy.Field()
 
 
 class PlayerMatchItem(Item):
