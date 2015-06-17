@@ -81,13 +81,12 @@ class DatabasePipeline(object):
             tp.session = tp.Session()
         AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
         if AUTO_COMMIT_INTERVAL:
-            tp.AUTO_COMMIT_INTERVAL = AUTO_COMMIT_INTERVAL
-            reactor.callLater(tp.AUTO_COMMIT_INTERVAL, tp.auto_commit)
+            from twisted.internet import task
+            task.LoopingCall(cls.auto_commit, tp).start(AUTO_COMMIT_INTERVAL)
         return tp
 
     def auto_commit(self):
         self.session.commit()
-        reactor.callLater(self.AUTO_COMMIT_INTERVAL, self.auto_commit)
 
     def close_spider(self, spider):
         self.session.commit()
