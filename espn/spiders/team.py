@@ -54,7 +54,7 @@ class TeamSpider(scrapy.Spider):
                 group = matched.groupdict()
                 type = group["type"]
                 id = group["id"]
-                espn_name = group["name"]
+                #espn_name = group["name"]
                 item = TeamItem(name_en=name_en,
                                 id=id,
                                 #espn_name=espn_name,

@@ -111,6 +111,7 @@ class PlayerPipeline(TeamPipeline):
             item = self.tidy_item(item)
         return item
 
+    @staticmethod
     def update(session, item):
         #if isinstance(item, PlayerItem):
         team_id = item.pop("team_id", None)

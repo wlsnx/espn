@@ -18,7 +18,7 @@ class PlayerSpider(Spider):
         #Rule(LinkExtractor(allow=r'player/\d+/.*'), callback='parse_player', follow=True),
     #)
 
-    URL = "http://www.espnfc.com/{type}/{espn_name}/{id}/squad?league=all"
+    URL = "http://www.espnfc.com/{type}/team_name/{id}/squad?league=all"
     player_pat = re.compile("/(\d+)/")
 
     def start_requests(self):
@@ -26,7 +26,7 @@ class PlayerSpider(Spider):
         if SERVER:
             import dataset
             db = dataset.connect(SERVER)
-            teams = db.query("select id, type, espn_name from yt_team")
+            teams = db.query("select id, type from yt_team")
             for team in teams:
                 url = self.URL.format(**team)
                 yield Request(url,
