@@ -57,7 +57,7 @@ class TeamSpider(scrapy.Spider):
                 espn_name = group["name"]
                 item = TeamItem(name_en=name_en,
                                 id=id,
-                                espn_name=espn_name,
+                                #espn_name=espn_name,
                                 league_id=league_id,
                                 type=type)
                 yield item
