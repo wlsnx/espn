@@ -64,64 +64,38 @@ class DictCache(dict):
 dict_cache = DictCache()
 
 
-class DatabasePipeline(object):
-
-    @classmethod
-    def from_settings(cls, settings):
-        tp = cls()
-        SERVER = settings.get("SERVER")
-        if not SERVER:
-            raise NotConfigured
-        SESSION = settings.get("SESSION")
-        if SESSION:
-            tp.session = SESSION
-        else:
-            db = sa.create_engine(SERVER)
-            tp.Session = sessionmaker(db)
-            tp.session = tp.Session()
-        AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
-        if AUTO_COMMIT_INTERVAL:
-            from twisted.internet import task
-            task.LoopingCall(cls.auto_commit, tp).start(AUTO_COMMIT_INTERVAL)
-        return tp
-
-    def auto_commit(self):
-        self.session.commit()
-
-    def close_spider(self, spider):
-        self.session.commit()
-
-
 class TeamPipeline(object):
 
-    def process_item(self, item, spider):
-        if isinstance(item, TeamItem):
-            team = self.session.query(Team).filter_by(id=item["id"]).first()
-            league_id = item.pop("league_id")
-            if not team:
-                team = Team(**item)
-                self.session.add(team)
-            else:
-                team.update(**item)
-            league = self.session.query(League).filter_by(id=league_id).first()
-            if league and league not in team.league:
-                team.league.append(league)
-        return item
+    #def process_item(self, item, spider):
+        #return item
 
-    @classmethod
-    def from_settings(cls, settings):
-        tp = cls()
-        SERVER = settings.get("SERVER")
-        if not SERVER:
-            raise NotConfigured
-        SESSION = settings.get("SESSION")
-        if SESSION:
-            tp.session = SESSION
+    @staticmethod
+    def update(session, item):
+        team = session.query(Team).filter_by(id=item["id"]).first()
+        league_id = item.pop("league_id")
+        if not team:
+            team = Team(**item)
+            session.add(team)
         else:
-            db = sa.create_engine(SERVER)
-            tp.Session = sessionmaker(db)
-            tp.session = tp.Session()
-        return tp
+            team.update(**item)
+        league = session.query(League).filter_by(id=league_id).first()
+        if league and league not in team.league:
+            team.league.append(league)
+
+    #@classmethod
+    #def from_settings(cls, settings):
+        #tp = cls()
+        #SERVER = settings.get("SERVER")
+        #if not SERVER:
+            #raise NotConfigured
+        #SESSION = settings.get("SESSION")
+        #if SESSION:
+            #tp.session = SESSION
+        #else:
+            #db = sa.create_engine(SERVER)
+            #tp.Session = sessionmaker(db)
+            #tp.session = tp.Session()
+        #return tp
 
 
 import re
@@ -135,24 +109,28 @@ class PlayerPipeline(TeamPipeline):
     def process_item(self, item, spider):
         if isinstance(item, PlayerItem):
             item = self.tidy_item(item)
-            team_id = item.pop("team_id", None)
-            number = item.pop("number", None)
-            team_player = TeamPlayer(team_id=team_id,
-                                     number=number)
-            player = self.session.query(Player).filter_by(id=item["id"]).first()
-            if not player:
-                player = Player(**item)
-            else:
-                player.update(**item)
-            team_player = self.session.query(TeamPlayer).filter_by(team_id=team_id,
-                                                                   player_id=player.id).first()
-            if not team_player:
-                team_player = TeamPlayer(number=number,
-                                         team_id=team_id)
-                player.team.append(team_player)
-            team_player.number = number
-            self.session.add(player)
         return item
+
+    def update(session, item):
+        #if isinstance(item, PlayerItem):
+        team_id = item.pop("team_id", None)
+        number = item.pop("number", None)
+        team_player = TeamPlayer(team_id=team_id,
+                                    number=number)
+        player = session.query(Player).filter_by(id=item["id"]).first()
+        if not player:
+            player = Player(**item)
+        else:
+            player.update(**item)
+        team_player = session.query(TeamPlayer).filter_by(team_id=team_id,
+                                                                player_id=player.id).first()
+        if not team_player:
+            team_player = TeamPlayer(number=number,
+                                        team_id=team_id)
+            player.team.append(team_player)
+        team_player.number = number
+        session.add(player)
+        #return item
 
     def tidy_item(self, item):
         _item = item.copy()
@@ -213,19 +191,6 @@ class MatchPipeline(TeamPipeline):
                 finish = self.status[finish] if finish in self.status else 0
                 item["finish"] = finish
 
-            for team in ("home_id", "away_id"):
-                if team in item:
-                    team_id = item[team]
-                    try:
-                        team_id = int(team_id)
-                        _team = self.session.query(Team).filter_by(id=team_id).first()
-                    except ValueError:
-                        _team = self.session.query(Team).filter_by(name_en=team_id).first()
-                    if _team:
-                        item[team] = _team.id
-                    else:
-                        raise DropItem
-
             for score in ("home_score", "away_score"):
                 if score in item:
                     team_score = item[score]
@@ -241,25 +206,41 @@ class MatchPipeline(TeamPipeline):
                     except ValueError:
                         item.pop(score)
 
-            if "league_id" in item:
-                league_id = item["league_id"]
-                try:
-                    league_id = int(league_id)
-                    league= self.session.query(League).filter_by(id=league_id).first()
-                except ValueError:
-                    league= self.session.query(League).filter_by(name=league_id).first()
-                if league:
-                    item["league_id"] = league.id
-                else:
-                    item.pop("league_id")
-
-            match = self.session.query(Match).filter_by(espn_id=item["espn_id"]).first()
-            if not match:
-                match = Match(**item)
-                self.session.add(match)
-            else:
-                match.update(**item)
         return item
+
+    @staticmethod
+    def update(session, item):
+        for team in ("home_id", "away_id"):
+            if team in item:
+                team_id = item[team]
+                try:
+                    team_id = int(team_id)
+                    _team = session.query(Team).filter_by(id=team_id).first()
+                except ValueError:
+                    _team = session.query(Team).filter_by(name_en=team_id).first()
+                if _team:
+                    item[team] = _team.id
+                else:
+                    raise DropItem
+        if "league_id" in item:
+            league_id = item["league_id"]
+            try:
+                league_id = int(league_id)
+                league= session.query(League).filter_by(id=league_id).first()
+            except ValueError:
+                league= session.query(League).filter_by(name=league_id).first()
+            if league:
+                item["league_id"] = league.id
+            else:
+                item.pop("league_id")
+
+        match = session.query(Match).filter_by(espn_id=item["espn_id"]).first()
+        if not match:
+            match = Match(**item)
+            session.add(match)
+        else:
+            match.update(**item)
+
 
 
 class MatchDetailsPipeline(TeamPipeline):
@@ -287,28 +268,30 @@ class MatchDetailsPipeline(TeamPipeline):
             player_matched = self.player_id_pat.search(player_a_id)
             if player_matched:
                 item["player_a_id"] = player_matched.group(1)
-                player_a = self.session.query(Player).filter_by(id=item["player_a_id"]).count()
-                if not player_a:
-                    raise DropItem
                 if item["type"] == 4:
                     item["player_b"] = item["player_a"]
                     item["player_b_id"] = item["player_a_id"]
                     item["player_a"] = min_matched.groupdict()["player"]
-                    player_a_id = self.session.query(Player).filter_by(name_en=item["player_a"]).first()
-                    if player_a_id:
-                        item["player_a_id"] = player_a_id.id
-                    else:
-                        raise DropItem
-
-            existed = self.session.query(MatchFootballDetails).filter_by(**item).first()
-            if not existed:
-                football_detail = MatchFootballDetails(**item)
-                self.session.add(football_detail)
-            else:
-                existed.update(**item)
 
         return item
 
+    @staticmethod
+    def update(session, item):
+        player_a = session.query(Player).filter_by(id=item["player_a_id"]).first()
+        if player_a:
+            item["player_a_id"] = player_a.id
+        else:
+            raise DropItem
+        if "player_b_id" in item:
+            player_b = session.query(Player).filter_by(id=item["player_b_id"]).count()
+            if not player_b:
+                raise DropItem
+        existed = session.query(MatchFootballDetails).filter_by(**item).first()
+        if not existed:
+            football_detail = MatchFootballDetails(**item)
+            session.add(football_detail)
+        else:
+            existed.update(**item)
 
 class MatchFootballPipeline(TeamPipeline):
 
@@ -338,14 +321,16 @@ class MatchFootballPipeline(TeamPipeline):
                     except ValueError:
                         item.pop(team_score_key)
 
-            existed = self.session.query(MatchFootball).filter_by(match_id=item["match_id"]).first()
-            if not existed:
-                match_football = MatchFootball(**item)
-                self.session.add(match_football)
-            else:
-                existed.update(**item)
-
         return item
+
+    @staticmethod
+    def update(session, item):
+        existed = session.query(MatchFootball).filter_by(match_id=item["match_id"]).first()
+        if not existed:
+            match_football = MatchFootball(**item)
+            session.add(match_football)
+        else:
+            existed.update(**item)
 
 
 class PlayerMatchPipeline(TeamPipeline):
@@ -360,9 +345,6 @@ class PlayerMatchPipeline(TeamPipeline):
             matched = self.player_id_pat.search(player_id)
             if matched:
                 item["player_id"] = matched.group(1)
-                player = self.session.query(Player).filter_by(id=item["player_id"]).count()
-                if not player:
-                    raise DropItem
             for key, value in item.items():
                 if isinstance(value, basestring):
                     item[key] = re.sub("\s", "", value)
@@ -378,13 +360,68 @@ class PlayerMatchPipeline(TeamPipeline):
                     appear = int(appear_matched.groupdict()["base"])
                     item["appear"] = appear
 
-            existed = self.session.query(PlayerMatch).filter_by(player_id=item["player_id"],
-                                                                match_id=item["match_id"]).first()
-            if not existed:
-                player_match = PlayerMatch(**item)
-                self.session.add(player_match)
-            else:
-                existed.update(**item)
-
         return item
+
+    @staticmethod
+    def update(session, item):
+        player = session.query(Player).filter_by(id=item["player_id"]).count()
+        if not player:
+            raise DropItem
+        existed = session.query(PlayerMatch).filter_by(player_id=item["player_id"],
+                                                            match_id=item["match_id"]).first()
+        if not existed:
+            player_match = PlayerMatch(**item)
+            session.add(player_match)
+        else:
+            existed.update(**item)
+
+
+class DatabasePipeline(object):
+
+    @classmethod
+    def from_settings(cls, settings):
+        tp = cls()
+        SERVER = settings.get("SERVER")
+        if not SERVER:
+            raise NotConfigured
+        SESSION = settings.get("SESSION")
+        if SESSION:
+            tp.session = SESSION
+        else:
+            db = sa.create_engine(SERVER)
+            tp.Session = sessionmaker(db)
+            tp.session = tp.Session()
+        AUTO_COMMIT_COUNT = settings.getint("AUTO_COMMIT_COUNT", 1)
+        tp.AUTO_COMMIT_COUNT = AUTO_COMMIT_COUNT
+        #AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
+        #if AUTO_COMMIT_INTERVAL:
+            #from twisted.internet import task
+            #task.LoopingCall(cls.auto_commit, tp).start(AUTO_COMMIT_INTERVAL)
+        return tp
+
+    item_pipelines = {TeamItem: TeamPipeline,
+                      PlayerItem: PlayerPipeline,
+                      MatchItem: MatchPipeline,
+                      FootballDetailsItem: MatchDetailsPipeline,
+                      PlayerMatchItem: PlayerMatchPipeline,
+                      FootballItem: MatchFootballPipeline}
+
+    item_count = 0
+
+    def process_item(self, item, spider):
+        for item_type, pipeline in self.item_pipelines.items():
+            if isinstance(item, item_type):
+                pipeline.update(self.session, item)
+                break
+        self.item_count += 1
+        if self.item_count >= self.AUTO_COMMIT_COUNT:
+            self.session.commit()
+            self.item_count = 0
+        return item
+
+    #def auto_commit(self):
+        #self.session.commit()
+
+    def close_spider(self, spider):
+        self.session.commit()
 
