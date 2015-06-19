@@ -385,13 +385,13 @@ class DatabasePipeline(object):
         SERVER = settings.get("SERVER")
         if not SERVER:
             raise NotConfigured
-        SESSION = settings.get("SESSION")
-        if SESSION:
-            tp.session = SESSION
-        else:
-            db = sa.create_engine(SERVER)
-            tp.Session = sessionmaker(db)
-            tp.session = tp.Session()
+        #SESSION = settings.get("SESSION")
+        #if SESSION:
+            #tp.session = SESSION
+        #else:
+        db = sa.create_engine(SERVER)
+        tp.Session = sessionmaker(db)
+        tp.session = tp.Session()
         AUTO_COMMIT_COUNT = settings.getint("AUTO_COMMIT_COUNT", 1)
         tp.AUTO_COMMIT_COUNT = AUTO_COMMIT_COUNT
         #AUTO_COMMIT_INTERVAL = settings.getint("AUTO_COMMIT_INTERVAL")
@@ -412,7 +412,12 @@ class DatabasePipeline(object):
     def process_item(self, item, spider):
         for item_type, pipeline in self.item_pipelines.items():
             if isinstance(item, item_type):
-                pipeline.update(self.session, item)
+                try:
+                    pipeline.update(self.session, item)
+                except:
+                    self.session.rollback()
+                    self.session.commit()
+                    self.session = self.Session()
                 break
         self.item_count += 1
         if self.item_count >= self.AUTO_COMMIT_COUNT:
